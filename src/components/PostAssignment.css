@@ -1,0 +1,103 @@
+.post-assignment-container {
+  padding: 20px;
+  background-color: #f0f2f5;
+  min-height: 100vh;
+}
+
+.post-assignment-form {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 500px;
+  margin: auto;
+  text-align: center;
+}
+
+.post-assignment-form h2 {
+  margin-bottom: 20px;
+}
+
+.input-group {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.input-group input,
+.input-group select,
+.input-group textarea {
+  width: calc(100% - 20px);
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.input-group textarea {
+  resize: vertical;
+}
+
+.post-assignment-button {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 15px;
+}
+
+.post-assignment-button:hover {
+  background-color: #218838;
+}
+.assignment-list table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.assignment-list th,
+.assignment-list td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.assignment-list th {
+  background-color: #f4f4f4;
+  text-align: left;
+}
+
+.assignment-list tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.assignment-list tr:hover {
+  background-color: #f1f1f1;
+}
+.edit-button,
+.delete-button {
+  margin: 0 5px;
+  padding: 5px 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.edit-button {
+  background-color: #ffa500; /* Orange */
+  color: white;
+}
+
+.delete-button {
+  background-color: #dc143c; /* Crimson */
+  color: white;
+}
+
+.edit-button:hover,
+.delete-button:hover {
+  opacity: 0.8;
+}

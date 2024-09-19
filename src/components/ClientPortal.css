@@ -1,0 +1,51 @@
+.client-portal-container {
+  padding: 20px;
+  background-color: #f0f2f5;
+  min-height: 100vh;
+}
+
+
+.header h1 {
+  margin: 0;
+  font-size: 1.5em;
+}
+
+.header-buttons {
+  margin-top: 10px;
+}
+
+.profile-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 0 auto;
+  display: block;
+  font-size: 1em;
+  transition: background-color 0.3s ease;
+}
+
+.profile-button:hover {
+  background-color: #218838;
+}
+
+.toggle-post-assignment {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1em;
+  transition: background-color 0.3s ease;
+}
+
+.toggle-post-assignment:hover {
+  background-color: #0056b3;
+}
