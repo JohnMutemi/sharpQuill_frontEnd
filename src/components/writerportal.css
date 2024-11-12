@@ -142,3 +142,16 @@ label {
 .canceled {
   border-left: 5px solid #dc3545;
 }
+
+.chat-icon {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-top: 10px; /* Adjust spacing as necessary */
+  font-size: 1.2em; /* Adjust size as necessary */
+  color: #007bff; /* Color of the emoji and text */
+}
+
+.chat-emoji {
+  margin-right: 5px; /* Space between emoji and text */
+}

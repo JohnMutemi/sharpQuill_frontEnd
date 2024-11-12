@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from './UserContext';
+import FileUpload from './FileUpload';
+import {
+  connectSocket,
+  disconnectSocket,
+  joinOrderRoom,
+  sendMessage,
+  onMessageReceived,
+  joinSupportRoom,
+  sendSupportMessage,
+  onSupportMessageReceived,
+} from './socket';
 import './writerportal.css';
 
 const WriterPortal = () => {
@@ -12,15 +23,32 @@ const WriterPortal = () => {
   const [selectedAssignmentId, setSelectedAssignmentId] = useState(null);
   const [decline, setDecline] = useState(false);
   const [activeSection, setActiveSection] = useState('Available Orders');
+  const [balance, setBalance] = useState(100);
+  const [paymentHistory, setPaymentHistory] = useState([]);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [activeOrderId, setActiveOrderId] = useState(null);
+  const [supportMessages, setSupportMessages] = useState([]);
+  const [supportMessage, setSupportMessage] = useState('');
+  const { user } = useUser();
   const { token } = useUser();
 
-  // Fetch orders based on status
+  // Connect to the socket when the component mounts
+  useEffect(() => {
+    connectSocket();
+
+    return () => {
+      disconnectSocket();
+    };
+  }, []);
+  // Fetch orders and balance when token changes
   useEffect(() => {
     fetchOrders('available', setAvailableOrders);
     fetchOrders('my-bids', setMyBids);
     fetchOrders('in-progress', setInProgress);
     fetchOrders('completed', setCompletedOrders);
     fetchOrders('canceled', setCanceledOrders);
+    fetchBalance();
   }, [token]);
 
   const fetchOrders = (status, setState) => {
@@ -44,6 +72,34 @@ const WriterPortal = () => {
         console.error(`Error fetching ${status} orders:`, error);
         setState([]);
       });
+  };
+
+  const fetchBalance = () => {
+    fetch('http://127.0.0.1:5555/balance', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => setBalance(data.balance))
+      .catch((error) => console.error('Error fetching balance:', error));
+  };
+
+  const fetchPaymentHistory = () => {
+    fetch('http://127.0.0.1:5555/payment-history', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => setPaymentHistory(data))
+      .catch((error) =>
+        console.error('Error fetching payment history:', error)
+      );
   };
 
   const handleBid = (assignmentId) => {
@@ -94,6 +150,98 @@ const WriterPortal = () => {
     }
   };
 
+  const handleSubmitCompleted = (assignmentId) => {
+    const orderToComplete = inProgress.find(
+      (order) => order.id === assignmentId
+    );
+    if (orderToComplete) {
+      setCompletedOrders([...completedOrders, orderToComplete]);
+      setInProgress(inProgress.filter((order) => order.id !== assignmentId));
+      alert('Order marked as completed!');
+    }
+  };
+
+  // Join the order chat room when a specific order is selected
+  const handleJoinOrderChat = (orderId) => {
+    setActiveOrderId(orderId);
+    setChatMessages([]); // Reset chat messages when switching orders
+    joinOrderRoom(orderId);
+
+    // Listen for new messages in this order's chat
+    onMessageReceived((message) => {
+      setChatMessages((prevMessages) => [...prevMessages, message]);
+    });
+  };
+
+  // Send a message in the order chat
+  const handleSendMessage = () => {
+    if (newMessage.trim()) {
+      sendMessage(activeOrderId, newMessage);
+      setNewMessage(''); // Clear input after sending
+    }
+  };
+
+  // Join the support chat room
+  const handleJoinSupportChat = () => {
+    joinSupportRoom();
+
+    // Listen for support messages
+    onSupportMessageReceived((message) => {
+      setSupportMessages((prevMessages) => [...prevMessages, message]);
+    });
+  };
+
+  // Send a support message
+  const handleSendSupportMessage = () => {
+    if (supportMessage.trim()) {
+      sendSupportMessage(supportMessage);
+      setSupportMessage(''); // Clear input after sending
+    }
+  };
+
+  // Render the chat window for an order
+  const renderOrderChat = () => (
+    <div className="chat-window">
+      <div className="chat-messages">
+        {chatMessages.map((msg, index) => (
+          <div key={index} className="message">
+            {msg}
+          </div>
+        ))}
+      </div>
+      <div className="chat-input">
+        <input
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type your message..."
+        />
+        <button onClick={handleSendMessage}>Send</button>
+      </div>
+    </div>
+  );
+
+  // Render the support chat window
+  const renderSupportChat = () => (
+    <div className="support-chat-window">
+      <div className="support-chat-messages">
+        {supportMessages.map((msg, index) => (
+          <div key={index} className="message">
+            {msg}
+          </div>
+        ))}
+      </div>
+      <div className="support-chat-input">
+        <input
+          type="text"
+          value={supportMessage}
+          onChange={(e) => setSupportMessage(e.target.value)}
+          placeholder="Ask for help..."
+        />
+        <button onClick={handleSendSupportMessage}>Send</button>
+      </div>
+    </div>
+  );
   const renderSection = () => {
     switch (activeSection) {
       case 'Available Orders':
@@ -108,16 +256,39 @@ const WriterPortal = () => {
             setSelectedAssignmentId={setSelectedAssignmentId}
             decline={decline}
             setDecline={setDecline}
+            onJoinChat={handleJoinOrderChat} // Pass down the chat handler
           />
         );
       case 'My Bids':
-        return <Section title="My Bids" orders={myBids} />;
+        return (
+          <Section
+            title="My Bids"
+            orders={myBids}
+            onJoinChat={handleJoinOrderChat} // Pass down the chat handler
+          />
+        );
       case 'In Progress':
-        return <Section title="Orders in Progress" orders={inProgress} />;
+        return (
+          <Section
+            title="Orders in Progress"
+            orders={inProgress}
+            handleSubmitCompleted={handleSubmitCompleted}
+            FileUpload={FileUpload}
+            onJoinChat={handleJoinOrderChat} // Pass down the chat handler
+          />
+        );
       case 'Completed Orders':
         return <Section title="Completed Orders" orders={completedOrders} />;
       case 'Canceled Orders':
         return <Section title="Canceled Orders" orders={canceledOrders} />;
+      case 'Balance':
+        return (
+          <BalanceSection
+            balance={balance}
+            fetchPaymentHistory={fetchPaymentHistory}
+            paymentHistory={paymentHistory}
+          />
+        );
       default:
         return null;
     }
@@ -127,8 +298,14 @@ const WriterPortal = () => {
     <div className="dashboard-container">
       {/* Sidebar */}
       <div className="sidebar">
-        <h2>Writer Portal</h2>
+        <h2>Welcome, {user?.username}!</h2>
+        {/* <h1>Welcome, {user?.username}!</h1> */}
         <ul>
+          <li
+            className={activeSection === 'Balance' ? 'active' : ''}
+            onClick={() => setActiveSection('Balance')}>
+            Account Balance :${balance}
+          </li>
           <li
             className={activeSection === 'Available Orders' ? 'active' : ''}
             onClick={() => setActiveSection('Available Orders')}>
@@ -154,12 +331,22 @@ const WriterPortal = () => {
             onClick={() => setActiveSection('Canceled Orders')}>
             Canceled Orders
           </li>
+          <li
+            className={activeSection === 'Help' ? 'active' : ''}
+            onClick={() => {
+              setActiveSection('Help');
+              handleJoinSupportChat();
+            }}>
+            Help (Support)
+          </li>
         </ul>
       </div>
 
       {/* Main Content */}
       <div className="main-content">
         <h1 className="section-header">{activeSection}</h1>
+        {activeSection === 'Help' && renderSupportChat()}
+        {activeOrderId && renderOrderChat()}
         {renderSection()}
       </div>
     </div>
@@ -177,6 +364,9 @@ const Section = ({
   setSelectedAssignmentId,
   decline,
   setDecline,
+  handleSubmitCompleted,
+  FileUpload,
+  onJoinChat,
 }) => (
   <div className="orders-list">
     {orders.length > 0 ? (
@@ -208,29 +398,47 @@ const Section = ({
           <p>
             <strong>Reference Style:</strong> {order.reference_style}
           </p>
-          {handleBid && (
-            <div className="bid-section">
-              <input
-                type="checkbox"
-                checked={selectedAssignmentId === order.id && decline}
-                onChange={() => {
-                  setSelectedAssignmentId(order.id);
-                  setDecline(!decline);
-                }}
-              />
-              <label>
-                I have read the assignment details and can deliver exceptional
-                quality
-              </label>
-              <input
-                type="number"
-                placeholder="Enter bid amount"
-                value={selectedAssignmentId === order.id ? bidAmount : ''}
-                onChange={(e) => setBidAmount(e.target.value)}
-              />
-              <button onClick={() => handleBid(order.id)}>Place Bid</button>
+
+          <div className="order-actions">
+            {handleBid && (
+              <div className="bid-section">
+                <input
+                  type="checkbox"
+                  checked={selectedAssignmentId === order.id && decline}
+                  onChange={() => {
+                    setSelectedAssignmentId(order.id);
+                    setDecline(!decline);
+                  }}
+                />
+                <label>
+                  I have read the assignment details and I can deliver
+                  exceptional quality
+                </label>
+                <input
+                  type="number"
+                  placeholder="Enter bid amount"
+                  value={selectedAssignmentId === order.id ? bidAmount : ''}
+                  onChange={(e) => setBidAmount(e.target.value)}
+                />
+                <button onClick={() => handleBid(order.id)}>Place Bid</button>
+              </div>
+            )}
+            {title === 'In Progress' && (
+              <div className="file-upload-section">
+                <FileUpload assignmentId={order.id} />
+                <button onClick={() => handleSubmitCompleted(order.id)}>
+                  Mark as Completed
+                </button>
+              </div>
+            )}
+            {/* Chat Icon as Emoji for Chat */}
+            <div className="chat-icon" onClick={() => onJoinChat(order.id)}>
+              <span role="img" aria-label="Chat" className="chat-emoji">
+                💬
+              </span>
+              <span>Chat Customer</span>
             </div>
-          )}
+          </div>
         </div>
       ))
     ) : (
@@ -238,5 +446,30 @@ const Section = ({
     )}
   </div>
 );
+
+// Balance Section
+const BalanceSection = ({ balance, fetchPaymentHistory, paymentHistory }) => {
+  useEffect(() => {
+    fetchPaymentHistory();
+  }, [fetchPaymentHistory]);
+
+  return (
+    <div className="balance-section">
+      <h2>Balance: ${balance}</h2>
+      <h3>Payment History</h3>
+      <ul>
+        {paymentHistory.length > 0 ? (
+          paymentHistory.map((payment) => (
+            <li key={payment.id}>
+              {payment.date}: ${payment.amount} - {payment.description}
+            </li>
+          ))
+        ) : (
+          <li>No payment history available.</li>
+        )}
+      </ul>
+    </div>
+  );
+};
 
 export default WriterPortal;
