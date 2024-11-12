@@ -12,6 +12,7 @@ import {
   onSupportMessageReceived,
 } from './socket';
 import './writerportal.css';
+import moment from "moment"
 
 const WriterPortal = () => {
   const [availableOrders, setAvailableOrders] = useState([]);
@@ -257,6 +258,7 @@ const WriterPortal = () => {
             decline={decline}
             setDecline={setDecline}
             onJoinChat={handleJoinOrderChat} // Pass down the chat handler
+            
           />
         );
       case 'My Bids':
@@ -384,10 +386,14 @@ const Section = ({
           }`}>
           <h3>{order.title}</h3>
           <p>
-            <strong>Due Date:</strong> {order.due_date}
+            <strong>Due Date:</strong>{' '}
+            {moment(order.due_date).format('Do MMM, h:mmA')}
           </p>
           <p>
-            <strong>Description:</strong> {order.description}
+            <strong>Description:</strong>{' '}
+            {(order.description.length <= 200
+              ? order.description
+              : order.description.length.sub(0, 200)?}
           </p>
           <p>
             <strong>Price Tag:</strong> {order.price_tag}

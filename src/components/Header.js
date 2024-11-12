@@ -17,7 +17,7 @@ const Header = () => {
   };
 
   return (
-    <header className="relative bg-primaryDark text-highlight shadow-md">
+    <header className="sticky bg-primaryDark text-highlight shadow-md">
       <div className="container mx-auto flex justify-between items-center py-4">
         <div className="header__logo">
           <Link to="/" className="text-xl font-semibold text-primaryLight">

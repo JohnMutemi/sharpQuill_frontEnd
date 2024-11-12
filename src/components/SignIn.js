@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './SignIn.css';
 import { useUser } from './UserContext';
 
 function SignIn() {
@@ -31,15 +30,15 @@ function SignIn() {
         return response.json();
       })
       .then((userData) => {
-        console.log('User data received from server:', userData); // Debugging statement
+        console.log('User data received from server:', userData);
 
         // Store the user data in context, including their role
         login({
           username: userData.username,
           userId: userData.user_id,
           email: userData.email,
-          role: userData.role, // Ensure role is part of the user data
-          token: userData.access_token, // Ensure token is correctly named
+          role: userData.role,
+          token: userData.access_token,
         });
 
         setError('');
@@ -55,18 +54,23 @@ function SignIn() {
         }
       })
       .catch((error) => {
-        console.log('Login error:', error.message); // Debugging statement
+        console.log('Login error:', error.message);
         setError(error.message);
         setSuccess('');
       });
   };
 
   return (
-    <div className="signin-container">
-      <form onSubmit={handleSubmit} className="signin-form">
-        <h3>Sign In</h3>
-        <div className="input-group">
-          <label htmlFor="username">Username</label>
+    <div className="flex justify-center items-center min-h-screen bg-primaryLight p-4">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-md bg-white p-6 rounded-lg shadow-lg">
+        <h3 className="text-center text-primaryDark text-2xl mb-6">Sign In</h3>
+
+        <div className="mb-4">
+          <label htmlFor="username" className="block text-primaryDark mb-2">
+            Username
+          </label>
           <input
             id="username"
             type="text"
@@ -74,10 +78,14 @@ function SignIn() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            className="w-full px-4 py-2 text-primaryDark bg-gray-200 border border-secondary rounded-md focus:outline-none focus:ring-2 focus:ring-primaryAccent"
           />
         </div>
-        <div className="input-group">
-          <label htmlFor="password">Password</label>
+
+        <div className="mb-4">
+          <label htmlFor="password" className="block text-primaryDark mb-2">
+            Password
+          </label>
           <input
             id="password"
             type="password"
@@ -85,16 +93,29 @@ function SignIn() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            className="w-full px-4 py-2 text-primaryDark bg-gray-200 border border-secondary rounded-md focus:outline-none focus:ring-2 focus:ring-primaryAccent"
           />
         </div>
-        <button type="submit" className="signin-button">
+
+        <button
+          type="submit"
+          className="w-full bg-primaryAccent text-primaryDark py-2 rounded-md hover:bg-highlight transition duration-300">
           Sign In
         </button>
-        {error && <p className="error-message">{error}</p>}
-        {success && <p className="success-message">{success}</p>}
-        <div className="signup-link">
+
+        {error && <p className="text-red-500 text-center mt-4">{error}</p>}
+        {success && (
+          <p className="text-green-500 text-center mt-4">{success}</p>
+        )}
+
+        <div className="text-center mt-4 text-primaryDark">
           <p>
-            Don't have an account? <a href="/register">Sign Up</a>
+            Don't have an account?{' '}
+            <a
+              href="/register"
+              className="text-primaryAccent hover:text-highlight">
+              Sign Up
+            </a>
           </p>
         </div>
       </form>
