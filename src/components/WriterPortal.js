@@ -391,9 +391,16 @@ const Section = ({
           </p>
           <p>
             <strong>Description:</strong>{' '}
-            {(order.description.length <= 200
-              ? order.description
-              : order.description.length.sub(0, 200)?}
+            {/*
+              logic
+              if(order description length <= 50)
+                  print order description and pad the end with 50 &nbsp characters
+              else
+                  print a substring of order description of length 50 and add elipses at the end
+            */}
+            {order.description.length <= 50
+              ? order.description.padEnd(50, '\u00A0 ')
+              : order.description.substring(0, 50) + " ..."}
           </p>
           <p>
             <strong>Price Tag:</strong> {order.price_tag}
@@ -408,18 +415,29 @@ const Section = ({
           <div className="order-actions">
             {handleBid && (
               <div className="bid-section">
-                <input
-                  type="checkbox"
-                  checked={selectedAssignmentId === order.id && decline}
-                  onChange={() => {
-                    setSelectedAssignmentId(order.id);
-                    setDecline(!decline);
-                  }}
-                />
-                <label>
-                  I have read the assignment details and I can deliver
-                  exceptional quality
-                </label>
+                {/*
+                  Wrap checkbox and label in a container div so they can be styled independent from the parent
+                  flex - display flex
+                  flex-row - flex-direction: row -> align items horizontally
+                  item-start - align items to the top on the horizontal axis
+                */}
+                <div className={"flex flex-row items-start"}>
+                  {/* mt-[6px] -> move margin 6px from the top to make text and checkbox aligned*/}
+                  <input
+                    className={"mt-[6px]"}
+                    type="checkbox"
+                    checked={selectedAssignmentId === order.id && decline}
+                    onChange={() => {
+                      setSelectedAssignmentId(order.id);
+                      setDecline(!decline);
+                    }}
+                  />
+                  {/* mt-0 - margin top 0, font-medium -> font-weight-500 coz text was too large, text-xs -> make text very small*/}
+                  <label className={"mt-0 font-medium text-xs"}>
+                    I have read the assignment details and I can deliver
+                    exceptional quality
+                  </label>
+                </div>
                 <input
                   type="number"
                   placeholder="Enter bid amount"
